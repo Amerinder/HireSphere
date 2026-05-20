@@ -1,38 +1,43 @@
 # HireSphere
 
-HireSphere is a full-stack AI-powered job portal SaaS platform with a Laravel 12 API backend, MongoDB persistence, React/Vite frontend, email OTP authentication, Redis queues, email delivery, and OpenAI-powered resume intelligence.
+HireSphere is a full-stack job portal for students, recruiters, and admins. It uses a Laravel API, MongoDB persistence, Sanctum bearer authentication, email OTP login, a React/Vite frontend, recruiter job management, student applications with CV upload, and optional AI resume analysis.
 
-## Phase Status
+## Features
 
-Completed:
+- Email OTP login with student/recruiter role selection
+- MongoDB-backed users, jobs, applications, saved jobs, resumes, and OTPs
+- Student job search, saved jobs, applications, CV upload, and application withdrawal
+- Recruiter job posting, job deletion, application deadlines, applicant review, CV preview, and status updates
+- Automatic closure behavior for jobs after the last application date
+- Profile management for students and recruiters
+- Dashboard metrics for students, recruiters, and admins
+- Resume upload, PDF parsing, AI/fallback resume analysis, and candidate ranking
+- Admin analytics, user listing, job moderation, and recruiter verification APIs
+- Responsive React UI with Tailwind CSS and Lucide icons
+- Render/Vercel deployment artifacts
 
-- Laravel 12 backend scaffolded in `backend`
-- React/Vite frontend scaffolded in `frontend`
-- MongoDB Laravel driver installed and configured
-- Sanctum, Redis client, Resend SDK, and PDF parser packages installed for later phases
-- Tailwind CSS, React Router, Axios, React Hook Form, and Lucide icons installed
-- API route baseline added at `/api/v1/health`
-- Scalable frontend and backend folders created
-- Passwordless email OTP auth implemented with expiring single-use codes
-- Sanctum bearer tokens stored in MongoDB
-- Student and recruiter self-selection added to login
-- Role middleware added for protected APIs
-- Frontend auth context, protected routes, dashboard shell, and logout added
-- User profile API and frontend profile form added
-- Recruiter job posting and job CRUD APIs added
-- Student applications and recruiter applicant review APIs added
-- Frontend job list, job detail/apply, post-job, and applications pages added
-- MongoDB-backed job search filters, sorting, and pagination added
-- Student saved jobs added
-- Student, recruiter, and admin dashboard metrics added
-- Frontend debounced search, saved jobs page, and live dashboard metrics added
-- Phase 5 Redis queue worker infrastructure is intentionally deferred by request
-- Phase 6 resume upload, PDF parsing, AI analysis, and candidate ranking APIs added
-- Admin analytics API and dashboard added
-- Admin user listing, job moderation, and recruiter verification endpoints added
-- Security headers added to API responses
+## Tech Stack
 
-## Structure
+Backend:
+
+- Laravel 12
+- MongoDB Laravel driver
+- Laravel Sanctum
+- Laravel Mail / SMTP / optional Resend transport
+- PDF parser for resume extraction
+- OpenAI service with local deterministic fallback
+
+Frontend:
+
+- React
+- Vite
+- React Router
+- Axios
+- React Hook Form
+- Tailwind CSS
+- Lucide React icons
+
+## Project Structure
 
 ```text
 backend/
@@ -40,45 +45,20 @@ backend/
   app/Http/Requests
   app/Http/Resources
   app/Models
-  app/Services
   app/Repositories
-  app/Jobs
-  app/Notifications
-  app/Policies
-  app/Actions
-  app/Traits
+  app/Services
   routes/api.php
 
 frontend/
   src/api
-  src/components
-  src/pages
-  src/layouts
-  src/hooks
-  src/services
-  src/routes
-  src/utils
   src/context
+  src/hooks
+  src/layouts
+  src/pages
+  src/routes
+  src/services
+  src/assets
 ```
-
-## Packages Installed
-
-Backend:
-
-- `mongodb/laravel-mongodb`: official MongoDB integration for Laravel Eloquent and query builder.
-- `laravel/sanctum`: API token authentication for the email OTP login flow.
-- `predis/predis`: Redis client for queue workers without requiring the PhpRedis extension.
-- `resend/resend-php`: optional Resend mail transport for OTP and notification emails.
-- `smalot/pdfparser`: extracts text from uploaded resume PDFs before AI scoring.
-
-Frontend:
-
-- `axios`: API client foundation.
-- `react-router-dom`: route management and protected route setup.
-- `react-hook-form`: accessible, scalable form state.
-- `lucide-react`: consistent icon system.
-- `clsx`: conditional class composition.
-- `tailwindcss` and `@tailwindcss/vite`: utility-first styling via the Vite plugin.
 
 ## Local Setup
 
@@ -87,6 +67,7 @@ Backend:
 ```powershell
 cd backend
 copy .env.example .env
+php artisan key:generate
 php artisan serve
 ```
 
@@ -95,14 +76,54 @@ Frontend:
 ```powershell
 cd frontend
 copy .env.example .env
+npm install
 npm run dev
 ```
 
-MongoDB Compass:
+MongoDB:
 
-- Use `mongodb://127.0.0.1:27017`
-- Database name: `hiresphere`
-- Collections planned: `users`, `companies`, `jobs`, `applications`, `saved_jobs`, `notifications`, `login_otps`, `analytics`, `resumes`
+- Local URI: `mongodb://127.0.0.1:27017`
+- Database: `hiresphere`
+- Main collections: `users`, `jobs`, `applications`, `saved_jobs`, `resumes`, `login_otps`, `companies`, `personal_access_tokens`
+
+## Environment Notes
+
+Backend `.env` defaults:
+
+```env
+APP_URL=http://localhost:8000
+FRONTEND_URL=http://localhost:5173
+DB_CONNECTION=mongodb
+MONGODB_URI=mongodb://127.0.0.1:27017
+MONGODB_DATABASE=hiresphere
+MAIL_MAILER=log
+QUEUE_CONNECTION=sync
+LOGIN_OTP_EXPIRE_MINUTES=10
+```
+
+For Gmail OTP delivery:
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_SCHEME=smtp
+MAIL_USERNAME=yourgmail@gmail.com
+MAIL_PASSWORD=your_google_app_password_without_spaces
+MAIL_FROM_ADDRESS=yourgmail@gmail.com
+MAIL_FROM_NAME="HireSphere"
+```
+
+Google shows app passwords with spaces. Put the password in `.env` without spaces.
+
+After changing mail config:
+
+```powershell
+cd backend
+php artisan config:clear
+```
+
+Local development with `MAIL_MAILER=log` returns `local_otp` so login can be tested without real email.
 
 ## API Smoke Test
 
@@ -122,7 +143,7 @@ Expected response:
 }
 ```
 
-## Auth API Examples
+## Auth API
 
 Request an OTP:
 
@@ -137,7 +158,7 @@ Content-Type: application/json
 }
 ```
 
-Verify the OTP:
+Verify OTP:
 
 ```http
 POST http://localhost:8000/api/v1/auth/otp/verify
@@ -150,9 +171,7 @@ Content-Type: application/json
 }
 ```
 
-Local development uses `MAIL_MAILER=log` by default and also returns `local_otp` from the request endpoint, so OTP login works without a real email account. To send through Gmail SMTP, set `MAIL_MAILER=smtp`, `MAIL_HOST=smtp.gmail.com`, `MAIL_PORT=587`, `MAIL_USERNAME` to your Gmail address, and `MAIL_PASSWORD` to a Google app password.
-
-Get the current user:
+Get current user:
 
 ```http
 GET http://localhost:8000/api/v1/auth/me
@@ -168,22 +187,13 @@ Accept: application/json
 Authorization: Bearer YOUR_SANCTUM_TOKEN
 ```
 
-## Phase 3 API Examples
+## Jobs API
 
-Update profile:
+Search jobs:
 
 ```http
-PUT http://localhost:8000/api/v1/profile
+GET http://localhost:8000/api/v1/jobs?q=Laravel&workplace_type=remote&experience_level=junior&sort=latest
 Accept: application/json
-Authorization: Bearer YOUR_SANCTUM_TOKEN
-Content-Type: application/json
-
-{
-  "name": "Asha Student",
-  "headline": "React and Laravel learner",
-  "location": "Remote",
-  "skills": ["React", "Laravel", "MongoDB"]
-}
 ```
 
 Post a job as recruiter:
@@ -206,9 +216,22 @@ Content-Type: application/json
   "salary_max": 90000,
   "currency": "USD",
   "skills": ["Laravel", "MongoDB", "React"],
+  "application_deadline": "2026-06-30",
   "status": "open"
 }
 ```
+
+Delete a job as recruiter/admin:
+
+```http
+DELETE http://localhost:8000/api/v1/jobs/{job_id}
+Accept: application/json
+Authorization: Bearer RECRUITER_TOKEN
+```
+
+Open jobs with a past `application_deadline` are not shown in public open listings and do not accept new applications.
+
+## Applications API
 
 Apply to a job as student:
 
@@ -216,11 +239,32 @@ Apply to a job as student:
 POST http://localhost:8000/api/v1/jobs/{job_id}/applications
 Accept: application/json
 Authorization: Bearer STUDENT_TOKEN
-Content-Type: application/json
+Content-Type: multipart/form-data
 
-{
-  "cover_note": "I have built Laravel APIs and React dashboards."
-}
+first_name=Asha
+last_name=Sharma
+college_name=Delhi Technical Campus
+current_cgpa=8.4
+degree=B.Tech
+specialization=Computer Science
+cover_note=I have built Laravel APIs and React dashboards.
+cv=@resume.pdf
+```
+
+List my applications:
+
+```http
+GET http://localhost:8000/api/v1/applications/me
+Accept: application/json
+Authorization: Bearer STUDENT_TOKEN
+```
+
+Withdraw an application:
+
+```http
+DELETE http://localhost:8000/api/v1/applications/{application_id}
+Accept: application/json
+Authorization: Bearer STUDENT_TOKEN
 ```
 
 Review applicants as recruiter:
@@ -231,7 +275,15 @@ Accept: application/json
 Authorization: Bearer RECRUITER_TOKEN
 ```
 
-Shortlist or reject an application:
+Preview an application CV in the browser:
+
+```http
+GET http://localhost:8000/api/v1/applications/{application_id}/cv
+Accept: application/pdf
+Authorization: Bearer RECRUITER_TOKEN
+```
+
+Update application status:
 
 ```http
 PATCH http://localhost:8000/api/v1/applications/{application_id}/status
@@ -244,16 +296,29 @@ Content-Type: application/json
 }
 ```
 
-## Phase 4 API Examples
+Supported recruiter statuses: `submitted`, `shortlisted`, `rejected`.
 
-Search jobs:
+## Profile API
 
 ```http
-GET http://localhost:8000/api/v1/jobs?q=Laravel&workplace_type=remote&experience_level=junior&sort=latest
+PUT http://localhost:8000/api/v1/profile
 Accept: application/json
+Authorization: Bearer YOUR_SANCTUM_TOKEN
+Content-Type: application/json
+
+{
+  "name": "Asha Student",
+  "headline": "React and Laravel learner",
+  "location": "Remote",
+  "phone": "+91 9999999999",
+  "skills": ["React", "Laravel", "MongoDB"],
+  "bio": "Student developer interested in full-stack web apps."
+}
 ```
 
-Save a job as student:
+## Saved Jobs API
+
+Save a job:
 
 ```http
 POST http://localhost:8000/api/v1/jobs/{job_id}/save
@@ -269,6 +334,59 @@ Accept: application/json
 Authorization: Bearer STUDENT_TOKEN
 ```
 
+Unsave a job:
+
+```http
+DELETE http://localhost:8000/api/v1/jobs/{job_id}/save
+Accept: application/json
+Authorization: Bearer STUDENT_TOKEN
+```
+
+## Resume And AI APIs
+
+Upload a resume:
+
+```http
+POST http://localhost:8000/api/v1/resumes
+Accept: application/json
+Authorization: Bearer STUDENT_TOKEN
+Content-Type: multipart/form-data
+
+resume=@resume.pdf
+```
+
+Analyze a resume:
+
+```http
+POST http://localhost:8000/api/v1/resumes/{resume_id}/analyze
+Accept: application/json
+Authorization: Bearer STUDENT_TOKEN
+Content-Type: application/json
+
+{
+  "job_id": "optional_job_id"
+}
+```
+
+Rank candidates for a job:
+
+```http
+GET http://localhost:8000/api/v1/jobs/{job_id}/candidate-ranking
+Accept: application/json
+Authorization: Bearer RECRUITER_OR_ADMIN_TOKEN
+```
+
+OpenAI configuration:
+
+```env
+OPENAI_API_KEY=your_openai_key
+OPENAI_MODEL=gpt-5.4-mini
+```
+
+If `OPENAI_API_KEY` is empty, local development uses a deterministic fallback analyzer.
+
+## Dashboard And Admin APIs
+
 Dashboard metrics:
 
 ```http
@@ -276,8 +394,6 @@ GET http://localhost:8000/api/v1/dashboard
 Accept: application/json
 Authorization: Bearer YOUR_SANCTUM_TOKEN
 ```
-
-## Phase 7 API Examples
 
 Admin analytics:
 
@@ -303,7 +419,7 @@ Accept: application/json
 Authorization: Bearer ADMIN_TOKEN
 ```
 
-Verify a recruiter company:
+Verify a recruiter:
 
 ```http
 PATCH http://localhost:8000/api/v1/admin/recruiters/{recruiter_id}/verify
@@ -311,108 +427,55 @@ Accept: application/json
 Authorization: Bearer ADMIN_TOKEN
 ```
 
-## Phase 6 API Examples
+## Verification
 
-Upload a resume as student:
+Backend:
 
-```http
-POST http://localhost:8000/api/v1/resumes
-Accept: application/json
-Authorization: Bearer STUDENT_TOKEN
-Content-Type: multipart/form-data
-
-resume=@resume.pdf
+```powershell
+cd backend
+php artisan test
 ```
 
-Analyze a resume:
+Frontend:
 
-```http
-POST http://localhost:8000/api/v1/resumes/{resume_id}/analyze
-Accept: application/json
-Authorization: Bearer STUDENT_TOKEN
-Content-Type: application/json
-
-{
-  "job_id": "optional_job_id"
-}
+```powershell
+cd frontend
+npm run lint
+npm run build
 ```
 
-Rank candidates for a job as recruiter/admin:
+## Deployment
 
-```http
-GET http://localhost:8000/api/v1/jobs/{job_id}/candidate-ranking
-Accept: application/json
-Authorization: Bearer RECRUITER_OR_ADMIN_TOKEN
-```
+Backend deployment artifacts:
 
-OpenAI configuration:
+- `render.yaml`
+- `backend/Dockerfile`
+- `backend/docker/render-start.sh`
+- `backend/.env.production.example`
 
-```env
-OPENAI_API_KEY=your_openai_key
-OPENAI_MODEL=gpt-5.4-mini
-```
+Frontend deployment artifacts:
 
-If `OPENAI_API_KEY` is empty, local development uses a deterministic fallback analyzer. The queue job still runs through Laravel's job class, but `QUEUE_CONNECTION=sync` is used because Phase 5 Redis workers are deferred.
+- `frontend/vercel.json`
+- `frontend/.env.production.example`
 
-## Final Phase Status
-
-Phase 8 deployment preparation is included below. Deferred Phase 5 Redis worker infrastructure can be resumed later without changing the public API shape.
-
-## Phase 8 Deployment
-
-Added deployment artifacts:
-
-- `render.yaml` for the Render backend service
-- `backend/Dockerfile` for a PHP 8.3 Laravel API container
-- `backend/docker/render-start.sh` for Render startup optimization and serving
-- `backend/.env.production.example` for Render production variables
-- `frontend/vercel.json` for Vercel SPA rewrites
-- `frontend/.env.production.example` for Vercel production variables
-- Backend and frontend README files
-
-Backend deployment on Render:
-
-1. Push the repository to GitHub.
-2. In Render, create a Blueprint from `render.yaml`, or create a Docker web service manually with `backend` as the root directory.
-3. Set these required environment variables:
-
-```env
-APP_URL=https://your-render-api.onrender.com
-FRONTEND_URL=https://your-vercel-app.vercel.app
-MONGODB_URI=mongodb+srv://USER:PASSWORD@CLUSTER.mongodb.net/?retryWrites=true&w=majority
-MONGODB_DATABASE=hiresphere
-RESEND_API_KEY=your_resend_key
-OPENAI_API_KEY=your_openai_key
-```
-
-4. Keep these production values:
+Render backend essentials:
 
 ```env
 APP_ENV=production
 APP_DEBUG=false
+APP_URL=https://your-render-api.onrender.com
+FRONTEND_URL=https://your-vercel-app.vercel.app
 DB_CONNECTION=mongodb
+MONGODB_URI=mongodb+srv://USER:PASSWORD@CLUSTER.mongodb.net/?retryWrites=true&w=majority
+MONGODB_DATABASE=hiresphere
 QUEUE_CONNECTION=sync
 CACHE_STORE=file
 SESSION_DRIVER=file
+MAIL_MAILER=smtp
+OPENAI_API_KEY=your_openai_key
 ```
 
-Frontend deployment on Vercel:
-
-1. Import the GitHub repository in Vercel.
-2. Set the project root directory to `frontend`.
-3. Use the default Vite build command:
-
-```text
-npm run build
-```
-
-4. Set the output directory:
-
-```text
-dist
-```
-
-5. Add:
+Vercel frontend variable:
 
 ```env
 VITE_API_BASE_URL=https://your-render-api.onrender.com/api/v1
@@ -420,28 +483,9 @@ VITE_API_BASE_URL=https://your-render-api.onrender.com/api/v1
 
 Production checklist:
 
-- Use MongoDB Atlas instead of local MongoDB.
-- Verify your SMTP, Gmail app password, or Resend sender/domain before expecting real OTP emails.
-- Add `OPENAI_API_KEY` only in Render, never in frontend or committed files.
-- Set `FRONTEND_URL` to the exact Vercel production URL.
-- Set `APP_URL` to the exact Render production URL.
-- Keep bearer tokens client-side only; never print them in logs.
-- Re-enable Redis and queue workers later if Phase 5 is restored.
-
-## Phase 8 Readiness
-
-Verified before Phase 8:
-
-- `composer validate --no-check-publish` passes
-- Laravel API route registration passes with 31 API routes
-- Laravel test suite passes
-- Frontend `npm run lint` passes
-- Frontend `npm run build` passes
-- End-to-end smoke test passes for OTP auth, job posting, applications, saved jobs, resume analysis fallback, candidate ranking, admin analytics, and security headers
-
-Deferred or environment-dependent:
-
-- Redis queue workers are deferred; local queue driver is `sync`
-- OpenAI calls require `OPENAI_API_KEY`; local fallback analysis is active without a key
-- Production email delivery requires working SMTP credentials or `RESEND_API_KEY` with a verified sender/domain
-- Production deployment needs Render/Vercel environment variables configured in Phase 8
+- Use MongoDB Atlas.
+- Configure SMTP, Gmail app password, or Resend before expecting OTP emails.
+- Keep `OPENAI_API_KEY` only on the backend host.
+- Set `APP_URL` and `FRONTEND_URL` to the exact production URLs.
+- Keep bearer tokens client-side only and do not log them.
+- Re-enable Redis workers later if async queues are needed.
