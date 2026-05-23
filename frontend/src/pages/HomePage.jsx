@@ -7,7 +7,7 @@ import { fetchJobs } from '../services/jobService.js'
 
 const stats = [
   { label: 'Open roles', value: '2,480' },
-  { label: 'Resume scans', value: '18k' },
+  { label: 'Resume scans', value: '11k' },
   { label: 'Recruiters', value: '740' },
 ]
 
@@ -51,7 +51,7 @@ export function HomePage() {
           <div className="max-w-3xl pb-4">
             <div className="mb-5 inline-flex items-center gap-2 rounded-md bg-white/15 px-3 py-2 text-sm font-medium text-white ring-1 ring-white/25 backdrop-blur">
               <Sparkles size={16} />
-              Campus hiring, resumes, and recruiter pipelines in one place
+              Campus hiring, resumes, and recruiter JobPostings in one place
             </div>
             <h1 className="text-4xl font-semibold tracking-normal sm:text-6xl">HireSphere</h1>
             <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-100">
@@ -115,8 +115,8 @@ export function HomePage() {
           <div>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-sm font-medium text-emerald-700">Latest opportunities</p>
-                <h2 className="mt-1 text-2xl font-semibold text-slate-950">Open jobs</h2>
+                <p className="text-sm font-medium text-emerald-700">Latest Opportunities</p>
+                <h2 className="mt-1 text-2xl font-semibold text-slate-950">Open Jobs</h2>
               </div>
               <p className="text-sm text-slate-500">{loading ? 'Refreshing listings...' : `${jobs.length} roles shown`}</p>
             </div>

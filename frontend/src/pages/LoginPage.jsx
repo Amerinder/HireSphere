@@ -47,10 +47,10 @@ export function LoginPage() {
         <div className="grid size-11 place-items-center rounded-md bg-emerald-600 text-white">
           <Mail size={20} />
         </div>
-        <h1 className="mt-5 text-2xl font-semibold">Email OTP login</h1>
+        <h1 className="mt-5 text-2xl font-semibold">LOGIN</h1>
         <p className="mt-2 text-sm leading-6 text-slate-600">Enter your email to receive a six-digit OTP.</p>
         <label className="mt-6 block">
-          <span className="text-sm font-medium text-slate-700">Email address</span>
+          <span className="text-sm font-medium text-slate-700">Email Address</span>
           <input
             type="email"
             className="mt-2 h-12 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
@@ -61,7 +61,7 @@ export function LoginPage() {
         </label>
         {step === 'email' ? (
           <label className="mt-4 block">
-            <span className="text-sm font-medium text-slate-700">Account type</span>
+            <span className="text-sm font-medium text-slate-700">Account Type</span>
             <select
               className="mt-2 h-12 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
               defaultValue="student"
